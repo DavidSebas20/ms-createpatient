@@ -31,7 +31,18 @@ jobs:
         run: |
           rm -rf domain_repo/ms-createpatient
           mkdir -p domain_repo/ms-createpatient
-          cp -r $(ls -A | grep -v 'domain_repo') domain_repo/ms-createpatient/
+          rsync -av --exclude='.git' . domain_repo/ms-createpatient/
+       
+      - name: Ensure branch exists in domain repository
+        run: |
+          cd domain_repo
+          git fetch origin
+          if ! git show-ref --verify --quiet refs/heads/${{ github.ref_name }}; then
+            git checkout -b ${{ github.ref_name }}
+            git push origin ${{ github.ref_name }}
+          else
+            git checkout ${{ github.ref_name }}
+          fi
 
       - name: Commit and push changes
         run: |
@@ -43,5 +54,5 @@ jobs:
             echo "No changes to commit."
             exit 0
           fi
-          git commit -m "Sync ms-createpatients: ${{ env.CHANGED_FILES }}"
+          git commit -m "Sync ms-createpatient: ${{ env.CHANGED_FILES }}"
           git push origin ${{ github.ref_name }}
