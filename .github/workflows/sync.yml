@@ -11,12 +11,14 @@ jobs:
     steps:
       - name: Checkout microservice repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 
 
-      - name: Get list of changed files
-        id: changed_files
+      - name: Get latest commit message
+        id: commit_message
         run: |
-          git fetch origin ${{ github.ref_name }}
-          echo "CHANGED_FILES=$(git diff --name-only HEAD^ HEAD | tr '\n' ' ')" >> $GITHUB_ENV
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "COMMIT_MSG=$COMMIT_MSG" >> $GITHUB_ENV
 
       - name: Checkout domain repository
         uses: actions/checkout@v3
@@ -25,11 +27,12 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           path: domain_repo
 
-      - name: Copy microservice to domain repository
+      - name: Clean up existing files in domain repository
         run: |
-          rm -rf domain_repo/ms-createpatient
-          mkdir -p domain_repo/ms-createpatient
-          rsync -av --exclude='.git' . domain_repo/ms-createpatient/
+          cd domain_repo
+          # Eliminar archivos no rastreados antes de cambiar de rama
+          git clean -fd
+          git reset --hard
 
       - name: Ensure branch exists in domain repository
         run: |
@@ -44,6 +47,12 @@ jobs:
             git pull origin ${{ github.ref_name }} --rebase
           fi
 
+      - name: Copy microservice to domain repository
+        run: |
+          rm -rf domain_repo/ms-createpatient
+          mkdir -p domain_repo/ms-createpatient
+          rsync -av --exclude='.git' . domain_repo/ms-createpatient/
+
       - name: Commit and push changes
         run: |
           cd domain_repo
@@ -54,5 +63,7 @@ jobs:
             echo "No changes to commit."
             exit 0
           fi
-          git commit -m "Sync ms-createpatient: ${CHANGED_FILES}"
+          git commit -m "${{ env.COMMIT_MSG }}"
+          # Resolver conflictos automáticamente si es necesario
+          git pull origin ${{ github.ref_name }} --rebase || git merge origin/${{ github.ref_name }} --strategy-option theirs
           git push origin ${{ github.ref_name }}
