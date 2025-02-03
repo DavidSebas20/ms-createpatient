@@ -29,9 +29,9 @@ jobs:
 
       - name: Copy microservice to domain repository
         run: |
-          rm -rf domain_repo/ms-createpatients
-          mkdir -p domain_repo/ms-createpatients
-          cp -r $(ls -A | grep -v 'domain_repo') domain_repo/ms-createpatients/
+          rm -rf domain_repo/ms-createpatient
+          mkdir -p domain_repo/ms-createpatient
+          cp -r $(ls -A | grep -v 'domain_repo') domain_repo/ms-createpatient/
 
       - name: Commit and push changes
         run: |
