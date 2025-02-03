@@ -31,7 +31,7 @@ jobs:
         run: |
           rm -rf domain_repo/ms-createpatients
           mkdir -p domain_repo/ms-createpatients
-          cp -r . domain_repo/ms-createpatients/
+          cp -r $(ls -A | grep -v 'domain_repo') domain_repo/ms-createpatients/
 
       - name: Commit and push changes
         run: |
