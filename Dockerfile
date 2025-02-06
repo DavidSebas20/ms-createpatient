@@ -1,29 +1,29 @@
-# Etapa 1: Construcción del proyecto con Maven
+# Stage 1: Build the project with Maven
 FROM maven:3.9-eclipse-temurin-21 AS build
 
-# Establecer el directorio de trabajo dentro del contenedor
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copiar el archivo pom.xml
+# Copy the pom.xml file
 COPY pom.xml .
 
-# Descargar las dependencias (sin compilar el código aún)
+# Download dependencies (without compiling the code yet)
 RUN mvn dependency:go-offline
 
-# Copiar el código fuente de la aplicación
+# Copy the application source code
 COPY src ./src
 
-# Compilar y empaquetar la aplicación
+# Compile and package the application
 RUN mvn clean package -DskipTests
 
-# Etapa 2: Creación de la imagen final
+# Stage 2: Create the final image
 FROM eclipse-temurin:21-jre
 
-# Establecer el directorio de trabajo
+# Set the working directory
 WORKDIR /app
 
-# Copiar el JAR generado desde la etapa de construcción
+# Copy the generated JAR from the build stage
 COPY --from=build /app/target/*.jar app.jar
 
-# Definir el comando para ejecutar la aplicación
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Define the command to run the application
+ENTRYPOINT ["java", "-jar", "app.jar"]
